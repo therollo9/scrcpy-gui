@@ -609,6 +609,7 @@ pub struct ScrcpyConfig {
     res: Option<String>,
     hid_keyboard: Option<bool>,
     hid_mouse: Option<bool>,
+    render_driver: Option<String>,
 }
 
 fn build_scrcpy_args(config: &ScrcpyConfig, video_dir_fallback: Option<String>) -> Vec<String> {

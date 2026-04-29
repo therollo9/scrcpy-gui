@@ -2,6 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
+export interface RenderDriverOption {
+    id: string;
+    label: string;
+}
+
+export interface RenderDriverSupport {
+    hostOs: string;
+    supportsRenderDriver: boolean;
+    supportedDrivers: RenderDriverOption[];
+}
+
 export interface ScrcpyConfig {
     device: string;
     sessionMode: string;
@@ -30,6 +41,7 @@ export interface ScrcpyConfig {
     aspectRatioLock?: boolean;
     hidKeyboard?: boolean;
     hidMouse?: boolean;
+    renderDriver?: string;
 }
 
 export function useScrcpy() {
@@ -45,6 +57,11 @@ export function useScrcpy() {
     const [runningDevices, setRunningDevices] = useState<string[]>([]);
     const [defaultRecordPath, setDefaultRecordPath] = useState<string>("");
     const [detectedCameras, setDetectedCameras] = useState<{ id: string, name: string }[]>([]);
+    const [renderDriverSupport, setRenderDriverSupport] = useState<RenderDriverSupport>({
+        hostOs: 'unknown',
+        supportsRenderDriver: false,
+        supportedDrivers: []
+    });
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
     // Removed mdnsDevices state
@@ -288,6 +305,29 @@ export function useScrcpy() {
             const res: any = await invoke('check_scrcpy', { customPath: pathToCheck });
             setScrcpyStatus(res);
 
+            if (res.found) {
+                try {
+                    const renderRes: any = await invoke('get_render_drivers', { customPath: pathToCheck });
+                    setRenderDriverSupport({
+                        hostOs: renderRes?.hostOs || 'unknown',
+                        supportsRenderDriver: !!renderRes?.supportsRenderDriver,
+                        supportedDrivers: Array.isArray(renderRes?.supportedDrivers) ? renderRes.supportedDrivers : []
+                    });
+                } catch {
+                    setRenderDriverSupport({
+                        hostOs: 'unknown',
+                        supportsRenderDriver: false,
+                        supportedDrivers: []
+                    });
+                }
+            } else {
+                setRenderDriverSupport({
+                    hostOs: 'unknown',
+                    supportsRenderDriver: false,
+                    supportedDrivers: []
+                });
+            }
+
             // Auto-trigger onboarding if not found
             if (!res.found) {
                 setIsOnboardingOpen(true);
@@ -495,6 +535,7 @@ export function useScrcpy() {
         runningDevices,
         defaultRecordPath,
         detectedCameras,
+        renderDriverSupport,
         isRefreshing,
         config,
         setConfig,
