@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Monitor, Camera, LayoutGrid, ChevronDown, Lock, Unlock, Settings2, Video, ExternalLink, Keyboard, Mouse } from 'lucide-react';
 import { RenderDriverSupport, ScrcpyConfig } from '../hooks/useScrcpy';
 import Tooltip from './Tooltip';
+import { buildRendererOptions, mapRendererSelection } from './rendererOptions';
 
 interface ControlPanelProps {
     config: ScrcpyConfig;
@@ -79,13 +80,7 @@ export default function ControlPanel({
         setConfig({ ...config, [field]: value });
     };
 
-    const rendererOptions = [
-        { value: 'auto', label: 'Auto' },
-        ...renderDriverSupport.supportedDrivers.map((driver) => ({
-            value: driver.id,
-            label: driver.label
-        }))
-    ];
+    const rendererOptions = buildRendererOptions(renderDriverSupport);
 
     const CustomSelect = ({ value, onChange, options, label, className = "" }: { value: any, onChange: (val: any) => void, options: { value: any, label: string }[], label?: string, className?: string }) => {
         const [isOpen, setIsOpen] = useState(false);
@@ -180,7 +175,7 @@ export default function ControlPanel({
             <CustomSelect
                 label="Graphics Renderer"
                 value={config.renderDriver || 'auto'}
-                onChange={(val) => handleChange('renderDriver', val === 'auto' ? undefined : val)}
+                onChange={(val) => handleChange('renderDriver', mapRendererSelection(val))}
                 options={rendererOptions}
             />
         </div>
