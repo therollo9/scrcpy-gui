@@ -28,6 +28,10 @@ ScrcpyGUI v3 is a modern, feature-rich GUI for [scrcpy](https://github.com/Genym
 - **🎮 Precision Input (OTG)**:
   - **HID Keyboard**: Native hardware simulation for international layouts and special characters.
   - **HID Mouse**: Zero-lag, high-precision cursor control for a "native desktop" feel.
+- **🖥️ Graphics Renderer Selection**:
+  - Choose a renderer backend such as Direct3D, OpenGL, OpenGL ES, Metal, or Software.
+  - Options are filtered by what your scrcpy build reports and what your host OS supports.
+  - **Auto** is always available and uses scrcpy default behavior.
 - **🌐 Seamless Connectivity**:
   - **Wireless Pairing**: Native UI for Android 11+ wireless pairings.
   - **Connection History**: Remember and reconnect to wireless devices with one click.
