@@ -40,6 +40,7 @@ function App() {
     sessionRunning,
     clearLogs,
     detectedCameras,
+    renderDriverSupport,
     config,
     setConfig,
     theme,
@@ -269,6 +270,7 @@ function App() {
                     onStop={handleStop}
                     isRunning={sessionRunning}
                     detectedCameras={detectedCameras}
+                    renderDriverSupport={renderDriverSupport}
                     onListOptions={(arg) => {
                       if (activeDevice) {
                         listScrcpyOptions(activeDevice, arg);

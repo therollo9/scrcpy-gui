@@ -645,6 +645,14 @@ fn build_scrcpy_args(config: &ScrcpyConfig, video_dir_fallback: Option<String>) 
             args.push("--mouse=uhid".to_string());
         }
 
+        if let Some(render_driver) = &config.render_driver {
+            let selected_driver = render_driver.trim();
+            if !selected_driver.is_empty() && selected_driver != "auto" {
+                args.push("--render-driver".to_string());
+                args.push(selected_driver.to_string());
+            }
+        }
+
         if let Some(bitrate) = config.bitrate {
             args.push("--video-bit-rate".to_string());
             args.push(format!("{}M", bitrate));
