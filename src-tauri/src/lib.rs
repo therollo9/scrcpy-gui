@@ -85,6 +85,7 @@ pub fn run() {
             commands::stop_scrcpy,
             commands::download_scrcpy,
             commands::list_scrcpy_options,
+            commands::get_render_drivers,
             commands::get_videos_dir,
             commands::save_report,
             commands::run_terminal_command,

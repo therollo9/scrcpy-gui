@@ -101,6 +101,26 @@ Turn your phone into a professional webcam.
 3. Set your desired **FPS** (up to 60fps supported on most modern phones).
 4. **OBS Integration**: Open **OBS Studio**, add a "Window Capture" source, and select the ScrcpyGUI window. Use OBS's **Virtual Camera** to use your phone in Zoom, Teams, or Discord.
 
+### 🖥 Graphics Renderer (Render API)
+You can choose which graphics renderer scrcpy should request for video display.
+
+- **Auto**: Recommended default. Lets scrcpy choose the best renderer.
+- **Manual Selection**: Options like Direct3D, OpenGL, OpenGL ES, Metal, or Software may appear.
+
+Renderer choices are **capability-aware**:
+
+- ScrcpyGUI reads what your installed scrcpy build advertises.
+- ScrcpyGUI filters options by your host OS.
+- Unsupported options are hidden automatically.
+
+Examples:
+
+- Windows typically shows Direct3D/OpenGL/OpenGL ES/Software (no Metal).
+- macOS may show Metal/OpenGL/OpenGL ES/Software.
+- Linux typically shows OpenGL/OpenGL ES/Software.
+
+If a renderer is selected manually, ScrcpyGUI passes it to scrcpy with `--render-driver`.
+
 ### 📂 File Transfers & APKs
 - **Install Apps**: Just drag an `.apk` file from your PC and drop it anywhere into the ScrcpyGUI window.
 - **Transfer Files**: Drag any file into the window to automatically push it to your device's `/sdcard/Download/` folder.

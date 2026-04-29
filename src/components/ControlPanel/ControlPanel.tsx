@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Monitor, Camera, LayoutGrid, ChevronDown, Lock, Unlock, Settings2, Video, ExternalLink, Keyboard, Mouse } from 'lucide-react';
-import { ScrcpyConfig } from '../hooks/useScrcpy';
-import Tooltip from './Tooltip';
+import { RenderDriverSupport, ScrcpyConfig } from '../../hooks/useScrcpy';
+import Tooltip from '../Tooltip';
+import { buildRendererOptions, mapRendererSelection } from './rendererOptions';
 
 interface ControlPanelProps {
     config: ScrcpyConfig;
@@ -11,6 +12,7 @@ interface ControlPanelProps {
     isRunning: boolean;
     onListOptions: (arg: string) => void;
     detectedCameras?: { id: string, name: string }[];
+    renderDriverSupport?: RenderDriverSupport;
 }
 
 const BitrateControl = ({ value, onChange }: { value: number, onChange: (val: number) => void }) => {
@@ -64,10 +66,21 @@ const VDSlider = ({ label, value, min, max, unit = "", onChange }: { label: stri
     );
 };
 
-export default function ControlPanel({ config, setConfig, onStart, onStop, isRunning, onListOptions, detectedCameras = [] }: ControlPanelProps) {
+export default function ControlPanel({
+    config,
+    setConfig,
+    onStart,
+    onStop,
+    isRunning,
+    onListOptions,
+    detectedCameras = [],
+    renderDriverSupport = { hostOs: 'unknown', supportsRenderDriver: false, supportedDrivers: [] }
+}: ControlPanelProps) {
     const handleChange = (field: keyof ScrcpyConfig, value: any) => {
         setConfig({ ...config, [field]: value });
     };
+
+    const rendererOptions = buildRendererOptions(renderDriverSupport);
 
     const CustomSelect = ({ value, onChange, options, label, className = "" }: { value: any, onChange: (val: any) => void, options: { value: any, label: string }[], label?: string, className?: string }) => {
         const [isOpen, setIsOpen] = useState(false);
@@ -158,6 +171,12 @@ export default function ControlPanel({ config, setConfig, onStart, onStop, isRun
                     { value: "90", label: "+90°" },
                     { value: "180", label: "180°" },
                 ]}
+            />
+            <CustomSelect
+                label="Graphics Renderer"
+                value={config.renderDriver || 'auto'}
+                onChange={(val) => handleChange('renderDriver', mapRendererSelection(val))}
+                options={rendererOptions}
             />
         </div>
     );

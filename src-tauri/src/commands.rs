@@ -457,6 +457,128 @@ pub async fn list_scrcpy_options(device: String, arg: String, custom_path: Optio
     }
 }
 
+fn detect_host_os() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        "unknown"
+    }
+}
+
+fn render_driver_label(driver: &str) -> &'static str {
+    match driver {
+        "direct3d" => "D3D11 (Direct3D)",
+        "opengl" => "OpenGL",
+        "opengles2" => "OpenGL ES 2",
+        "opengles" => "OpenGL ES",
+        "metal" => "Metal",
+        "software" => "Software",
+        "vulkan" => "Vulkan",
+        _ => "Custom",
+    }
+}
+
+fn is_driver_allowed_on_os(driver: &str, host_os: &str) -> bool {
+    match host_os {
+        "windows" => driver != "metal",
+        "macos" => driver != "direct3d",
+        "linux" => driver != "direct3d" && driver != "metal",
+        _ => true,
+    }
+}
+
+fn detect_render_drivers_from_help(help_output: &str) -> Vec<String> {
+    let known = [
+        "direct3d",
+        "opengl",
+        "opengles2",
+        "opengles",
+        "metal",
+        "software",
+        "vulkan",
+    ];
+
+    let lower = help_output.to_lowercase();
+    let render_context = if let Some(start) = lower.find("--render-driver") {
+        let end = (start + 1600).min(lower.len());
+        lower[start..end].to_string()
+    } else {
+        String::new()
+    };
+
+    known
+        .iter()
+        .filter(|driver| {
+            render_context.contains(&format!("\"{}\"", driver))
+                || render_context.contains(&format!("'{}'", driver))
+                || render_context.contains(*driver)
+        })
+        .map(|driver| (*driver).to_string())
+        .collect()
+}
+
+#[tauri::command]
+pub async fn get_render_drivers(custom_path: Option<String>) -> serde_json::Value {
+    let exe_path = get_binary_path("scrcpy", custom_path);
+    let host_os = detect_host_os();
+
+    let output = create_command(&exe_path).arg("--help").output().await;
+
+    match output {
+        Ok(o) => {
+            let out_text = String::from_utf8_lossy(&o.stdout);
+            let err_text = String::from_utf8_lossy(&o.stderr);
+            let combined = format!("{}{}", out_text, err_text);
+            let lower = combined.to_lowercase();
+
+            let supports_render_driver = lower.contains("--render-driver");
+            if !supports_render_driver {
+                return json!({
+                    "success": true,
+                    "hostOs": host_os,
+                    "supportsRenderDriver": false,
+                    "detectedDrivers": [],
+                    "supportedDrivers": [],
+                    "diagnostics": "scrcpy does not advertise --render-driver in --help output"
+                });
+            }
+
+            let detected_drivers = detect_render_drivers_from_help(&combined);
+            let supported_drivers: Vec<serde_json::Value> = detected_drivers
+                .iter()
+                .filter(|driver| is_driver_allowed_on_os(driver, host_os))
+                .map(|driver| {
+                    json!({
+                        "id": driver,
+                        "label": render_driver_label(driver)
+                    })
+                })
+                .collect();
+
+            json!({
+                "success": o.status.success(),
+                "hostOs": host_os,
+                "supportsRenderDriver": true,
+                "detectedDrivers": detected_drivers,
+                "supportedDrivers": supported_drivers,
+                "diagnostics": "render drivers parsed from scrcpy --help"
+            })
+        }
+        Err(e) => json!({
+            "success": false,
+            "hostOs": host_os,
+            "supportsRenderDriver": false,
+            "detectedDrivers": [],
+            "supportedDrivers": [],
+            "message": e.to_string()
+        }),
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScrcpyConfig {
@@ -487,6 +609,7 @@ pub struct ScrcpyConfig {
     res: Option<String>,
     hid_keyboard: Option<bool>,
     hid_mouse: Option<bool>,
+    render_driver: Option<String>,
 }
 
 fn build_scrcpy_args(config: &ScrcpyConfig, video_dir_fallback: Option<String>) -> Vec<String> {
@@ -520,6 +643,14 @@ fn build_scrcpy_args(config: &ScrcpyConfig, video_dir_fallback: Option<String>) 
         }
         if hid_mouse {
             args.push("--mouse=uhid".to_string());
+        }
+
+        if let Some(render_driver) = &config.render_driver {
+            let selected_driver = render_driver.trim();
+            if !selected_driver.is_empty() && selected_driver != "auto" {
+                args.push("--render-driver".to_string());
+                args.push(selected_driver.to_string());
+            }
         }
 
         if let Some(bitrate) = config.bitrate {
