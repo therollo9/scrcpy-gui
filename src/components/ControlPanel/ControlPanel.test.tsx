@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ControlPanel from '../ControlPanel';
+import ControlPanel from '.';
 import { RenderDriverSupport, ScrcpyConfig } from '../../hooks/useScrcpy';
 
 const supportedRenderers: RenderDriverSupport = {

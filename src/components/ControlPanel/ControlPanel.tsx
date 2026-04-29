@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Square, Monitor, Camera, LayoutGrid, ChevronDown, Lock, Unlock, Settings2, Video, ExternalLink, Keyboard, Mouse } from 'lucide-react';
-import { RenderDriverSupport, ScrcpyConfig } from '../hooks/useScrcpy';
-import Tooltip from './Tooltip';
+import { RenderDriverSupport, ScrcpyConfig } from '../../hooks/useScrcpy';
+import Tooltip from '../Tooltip';
 import { buildRendererOptions, mapRendererSelection } from './rendererOptions';
 
 interface ControlPanelProps {

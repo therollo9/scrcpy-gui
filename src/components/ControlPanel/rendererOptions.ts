@@ -1,4 +1,4 @@
-import { RenderDriverSupport } from '../hooks/useScrcpy';
+import { RenderDriverSupport } from '../../hooks/useScrcpy';
 
 export interface RendererOption {
     value: string;
